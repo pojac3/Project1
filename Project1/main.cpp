@@ -104,9 +104,54 @@ void SparseMatrix::display() {
     }
 };
 
+//method to display the matrix in its original format
 void SparseMatrix::displayMatrix() {
     
-};
+    //the current coordinate in the matrix that we will be comparing. it will be compared to every single entry
+    //in the myMatrix array to see if it has the same row and col
+    int currentSMRow = 0;
+    int currentSMCol = 0;
+    
+    //looping through all of the values in the original matrix, which turns out to be noRows*noCols values
+    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++)
+        
+        //comparing the current row and col to each entry in myMatrix
+        for (int j = 0; j < noNonSparseValues; j++)
+        {
+            //if the row and col match,
+            if ((this->getRow(j).getCol() == currentSMCol) && (this->getRow(j).getRow() == currentSMRow)) {
+                
+                //then print the value and and a space, and increment the current column
+                cout << this->getRow(j).getValue() << " ";
+                
+                //if at the end of the row, add an endl and increment the current row
+                if (j == (this->noCols - 1)) {
+                    cout << endl;
+                    currentSMCol = 0;
+                }
+                else {
+                    currentSMCol++;
+                }
+
+            }
+            
+            //if the current row and col do no match,
+            else {
+                
+                //then print the common value and increment the current col
+                cout  << this->commonValue << " ";
+                
+                //if at the end of the row, add an endl and increment the current row
+                if (j == (this->noCols - 1)) {
+                    cout << endl;
+                    currentSMRow++;
+                }
+                else {
+                    currentSMCol++;
+                }
+            }
+        }
+}; //YOU ARE SO CLOSE BUDDY KEEP GOING!!!!
 
 SparseRow SparseMatrix::getRow(int c) {
     return this->myMatrix[c];
@@ -147,7 +192,6 @@ int main () {
             cin >> value;
             if (value != cv) {
                 (*firstOne).setRow(nsv,i,j,value);
-                cout << nsv << endl;
                 nsv++;
             }
         }
@@ -159,8 +203,8 @@ int main () {
     //Statements to print the matrix
     cout << "First one in sparse matrix format" << endl;
     (*firstOne).display();
-//    cout << "First one in normal matrix format" << endl;
-//    (*firstOne).displayMatrix();
+    cout << "First one in normal matrix format" << endl;
+    (*firstOne).displayMatrix();
     /*
     cout << "Second one in sparse matrix format" << endl;
     (*secondOne).display();
