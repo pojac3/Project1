@@ -20,25 +20,33 @@ public:
     void display();// print Row#, Column#, value
     
     //other methods that are necessary such as get and set
-    int getRow() {return row;};
+    int getRow() {
+        return row;
+        
+    };
     void setRow(int r);
-    int getCol() {return col;};
+    int getCol() {
+        return col;
+        
+    };
     void setCol(int c);
-    int getValue() {return value;};
+    int getValue() {
+        return value;
+    };
     void setValue(int v);
 };
 
 SparseRow::SparseRow(int r, int c, int v) {
-    row = r;
-    col = c;
-    value = v;
+    this->setCol(r);
+    this->setRow(c);
+    this->setValue(v);
 }
 
 
 SparseRow::SparseRow() {
-    row = -1;
-    col = -1;
-    value = 0;
+    this->setCol(-1);
+    this->setRow(-1);
+    this->setValue(0);
 }
 
 class SparseMatrix {
@@ -57,7 +65,9 @@ public:SparseMatrix ();
     SparseMatrix*Add (SparseMatrix& M);
     void display();//Display the sparse matrix
     void displayMatrix (); //Display the matrix in its original format
+    void setRow(int nsv, int r, int c,int v);
     SparseRow getRow(int c);
+    
     //other methods that are necessary such as get and set
     
 };
@@ -73,7 +83,7 @@ SparseMatrix::SparseMatrix (int n, int m, int cv, int noNSV) {
 //write the methods after the class definition
 
 void SparseRow::display() {
-    cout << getRow() << getCol() << getValue() << endl;
+    cout << this->getRow() << " " << this->getCol() << " " << this->getValue() << endl;
 };
 
 SparseMatrix* SparseMatrix::Transpose() {
@@ -97,8 +107,15 @@ void SparseMatrix::display() {
 void SparseMatrix::displayMatrix() {
     
 };
+
 SparseRow SparseMatrix::getRow(int c) {
-    return myMatrix[c];
+    return this->myMatrix[c];
+};
+
+void SparseMatrix::setRow(int nsv, int r, int c, int v) {
+    this->myMatrix[nsv].setRow(r);
+    this->myMatrix[nsv].setCol(c);
+    this->myMatrix[nsv].setValue(v);
 };
 void SparseRow::setValue(int v) {
     this->value = v;
@@ -114,10 +131,11 @@ void SparseRow::setCol(int c) {
 
 int main () {
     
-    int n, m, cv, noNSV, r, c, value;
+    int n, m, cv, noNSV, nsv, r, c, value;
     c = 0;
     r = 0;
-    SparseMatrix* temp;
+    nsv = 0;
+//    SparseMatrix* temp;
     
     cin >> n >> m >> cv >> noNSV;
     SparseMatrix* firstOne = new SparseMatrix(n, m, cv, noNSV);
@@ -127,25 +145,23 @@ int main () {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             cin >> value;
-            if (cv != value) {
-                (*firstOne).getRow(i).setRow(i);
-                (*firstOne).getRow(i).setCol(j);
-                (*firstOne).getRow(i).setValue(value);
+            if (value != cv) {
+                (*firstOne).setRow(nsv,i,j,value);
+                cout << nsv << endl;
+                nsv++;
             }
         }
     }
-    (*firstOne).displayMatrix();
-    return 0;
     
-    /*
-    SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
+//    SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
     //Write the Statements to read in the second matrix
     
     //Statements to print the matrix
     cout << "First one in sparse matrix format" << endl;
     (*firstOne).display();
-    cout << "First one in normal matrix format" << endl;
-    (*firstOne).displayMatrix();
+//    cout << "First one in normal matrix format" << endl;
+//    (*firstOne).displayMatrix();
+    /*
     cout << "Second one in sparse matrix format" << endl;
     (*secondOne).display();
     cout << "Second one in normal matrix format" << endl;
@@ -164,4 +180,6 @@ int main () {
     (*temp).display();
      */
     
+    return 0;
+
 }
