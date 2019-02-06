@@ -80,6 +80,13 @@ SparseMatrix::SparseMatrix (int n, int m, int cv, int noNSV) {
     noNonSparseValues = noNSV;
     myMatrix = new SparseRow[noNSV];
 };
+SparseMatrix::SparseMatrix () {
+    noRows = 0;
+    noCols = 0;
+    commonValue = 0;
+    noNonSparseValues = 0;
+    myMatrix = nullptr;
+}
 //write the methods after the class definition
 
 void SparseRow::display() {
@@ -89,7 +96,7 @@ void SparseRow::display() {
 SparseMatrix* SparseMatrix::Transpose() {
     //temp SparseMatrix object for return
     int r, c, v;
-    SparseMatrix* copy = new SparseMatrix(this->noRows,this->noCols,this->commonValue,this->noNonSparseValues);
+    SparseMatrix* copy = new SparseMatrix(this->noRows,this->noCols,this->commonValue,0);
     for (int j = 0; j < noNonSparseValues; j++) {
         copy->getSparseRow(j) = getSparseRow(j);
     }
@@ -104,7 +111,45 @@ SparseMatrix* SparseMatrix::Transpose() {
 };
 
 SparseMatrix* SparseMatrix::Multiply(SparseMatrix &M) {
-    return 0;
+    
+    SparseMatrix* copy = new SparseMatrix(noRows,noCols,commonValue,0);
+    
+    int firstOneRow, firstOneCol, secondOneRow, secondOneCol, side, current;
+    firstOneRow = 0;
+    firstOneCol = 0;
+    secondOneRow = 0;
+    secondOneCol = 0;
+    current = 0;
+    side = noRows;
+    
+    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++) {
+        
+        //checking to see if i is 0 and if the matrix's side is 2 or less. required step in order to run properly on small matrices
+        if (((noRows > 2) || (noCols > 2)) && (i == 0)) {
+            i++;
+        }
+        for (int j = 0; j < side-1; j++) {
+            if ((firstOneCol == myMatrix[i].getCol() && firstOneRow == myMatrix[i].getRow()) && secondOneCol == M.myMatrix[i].getCol() && secondOneRow == M.myMatrix[i].getRow()) {
+                current += (myMatrix[i].getValue()*M.getSparseRow(i).getValue());
+            }
+            firstOneCol++;
+            secondOneRow++;
+        }
+        if (current != 0) {
+            (*copy).myMatrix[i].setCol(secondOneCol);
+            (*copy).myMatrix[i].setRow(firstOneRow);
+            (*copy).myMatrix[i].setValue(current);
+        if (secondOneCol != side-1) {
+            secondOneCol++;
+        }
+        else {
+            firstOneRow++;
+            secondOneCol = 0;
+        }
+    }
+}
+    
+    return copy;
 };
 
 SparseMatrix* SparseMatrix::Add(SparseMatrix &M) {
@@ -205,7 +250,7 @@ void SparseMatrix::displayMatrix() {
     }
 };
 SparseRow SparseMatrix::getSparseRow(int c) {
-    return this->myMatrix[c];
+    return myMatrix[c];
 };
 
 void SparseMatrix::setRow(int nsv, int r, int c, int v) {
@@ -248,6 +293,7 @@ int main () {
     
     cin >> n >> m >> cv >> noNSV;
     nsv = 0;
+    
     SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
     //Write the Statements to read in the second matrix
     for (int i = 0; i < n; i++) {
@@ -275,11 +321,9 @@ int main () {
     cout << "After Transpose second one in normal format" << endl;
     temp = (*secondOne).Transpose();
     (*temp).displayMatrix();
-    /*
     cout << "Multiplication of matrices in sparse matrix form:" << endl;
     temp = (*secondOne).Multiply(*firstOne);
     (*temp).display();
-     */
     cout << "Addition of matrices in sparse matrix form:" << endl;
     temp = (*secondOne).Add(*firstOne);
     (*temp).display();
