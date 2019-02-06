@@ -66,7 +66,8 @@ public:SparseMatrix ();
     void display();//Display the sparse matrix
     void displayMatrix (); //Display the matrix in its original format
     void setRow(int nsv, int r, int c,int v);
-    SparseRow getRow(int c);
+    SparseRow getSparseRow(int c);
+    void convert();
     
     //other methods that are necessary such as get and set
     
@@ -78,7 +79,6 @@ SparseMatrix::SparseMatrix (int n, int m, int cv, int noNSV) {
     commonValue = cv;
     noNonSparseValues = noNSV;
     myMatrix = new SparseRow[noNSV];
-    
 };
 //write the methods after the class definition
 
@@ -87,7 +87,20 @@ void SparseRow::display() {
 };
 
 SparseMatrix* SparseMatrix::Transpose() {
-    return 0;
+    //temp SparseMatrix object for return
+    int r, c, v;
+    SparseMatrix* copy = new SparseMatrix(this->noRows,this->noCols,this->commonValue,this->noNonSparseValues);
+    for (int j = 0; j < noNonSparseValues; j++) {
+        copy->getSparseRow(j) = getSparseRow(j);
+    }
+    
+    for (int i = 0; i < noNonSparseValues; i++) {
+        r = this->getSparseRow(i).getRow();
+        c = this->getSparseRow(i).getCol();
+        v = this->getSparseRow(i).getValue();
+        copy->setRow(i, c, r, v);
+    }
+    return copy;
 };
 
 SparseMatrix* SparseMatrix::Multiply(SparseMatrix &M) {
@@ -95,12 +108,57 @@ SparseMatrix* SparseMatrix::Multiply(SparseMatrix &M) {
 };
 
 SparseMatrix* SparseMatrix::Add(SparseMatrix &M) {
-    return 0;
+    //creating a copy of the array
+    SparseMatrix* copy = new SparseMatrix(noRows,noCols,commonValue,0);
+    
+    //starting values for the while loop and the value to be added once it is found
+    int i = 0, j, valueToAdd;
+
+    
+    //whether the value has been found or not
+    bool found;
+    
+    //boolean array so we dont have to instantiate a new one every time
+    bool* mArray = new bool[M.noNonSparseValues];
+    for (int k=0; k < M.noNonSparseValues; k++) {
+        mArray[k] = false;
+    }
+    
+    while (i < noNonSparseValues) {
+        j = 0;
+        found = false;
+        (*copy).myMatrix[(*copy).noNonSparseValues].setRow(myMatrix[i].getRow());
+        (*copy).myMatrix[(*copy).noNonSparseValues].setCol(myMatrix[i].getCol());
+        valueToAdd = 0;
+        while ((j < M.noNonSparseValues) && (!found)) {
+            if ((myMatrix[i].getRow() == M.myMatrix[j].getRow()) &&
+                (myMatrix[i].getCol() == M.myMatrix[j].getCol()) ) {
+                found = true;
+                valueToAdd = M.myMatrix[j].getValue();
+                mArray[j] = true;
+            }
+            else j++;
+        }
+        if (myMatrix[i].getValue() + valueToAdd != 0) {
+            (*copy).myMatrix[(*copy).noNonSparseValues++].setValue(myMatrix[i].getValue() + valueToAdd);
+        }
+        i++;
+    }
+    
+    for (int k=0; k < M.noNonSparseValues; k++) {
+        if (!mArray[k]) {
+            (*copy).myMatrix[(*copy).noNonSparseValues].setRow(myMatrix[k].getRow());
+            (*copy).myMatrix[(*copy).noNonSparseValues].setCol(myMatrix[k].getCol());
+            (*copy).myMatrix[(*copy).noNonSparseValues++].setValue(myMatrix[k].getValue());
+        }
+    }
+    
+    return copy;
 };
 
 void SparseMatrix::display() {
     for (int i = 0; i < this->noNonSparseValues; i++) {
-        this->getRow(i).display();
+        this->getSparseRow(i).display();
     }
 };
 
@@ -109,51 +167,44 @@ void SparseMatrix::displayMatrix() {
     
     //the current coordinate in the matrix that we will be comparing. it will be compared to every single entry
     //in the myMatrix array to see if it has the same row and col
-    int currentSMRow = 0;
-    int currentSMCol = 0;
+    int currentRow = 0;
+    int currentCol = 0;
     
-    //looping through all of the values in the original matrix, which turns out to be noRows*noCols values
-    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++)
+    //looping through all of the values in the original matrix, which turns out to be noRows*noCols
+    //(1 has to be subtracted from each of these values because c++ starts counting at 0) and checks them all against myMatrix
+    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++) {
+        if (((noRows > 2) || (noCols > 2)) && (i == 0)) {
+            i++;
+        }
         
         //comparing the current row and col to each entry in myMatrix
-        for (int j = 0; j < noNonSparseValues; j++)
-        {
+        for (int j = 0; j < noNonSparseValues; j++) {
             //if the row and col match,
-            if ((this->getRow(j).getCol() == currentSMCol) && (this->getRow(j).getRow() == currentSMRow)) {
-                
-                //then print the value and and a space, and increment the current column
-                cout << this->getRow(j).getValue() << " ";
-                
-                //if at the end of the row, add an endl and increment the current row
-                if (j == (this->noCols - 1)) {
-                    cout << endl;
-                    currentSMCol = 0;
-                }
-                else {
-                    currentSMCol++;
-                }
-
+            if ((this->getSparseRow(j).getCol() == currentCol) && (this->getSparseRow(j).getRow() == currentRow)) {
+                //then print the value and and a space
+                cout << this->getSparseRow(j).getValue() << " ";
             }
             
-            //if the current row and col do no match,
+            //if the current row and col do not match,
             else {
-                
-                //then print the common value and increment the current col
+                //then print the common value and a space
                 cout  << this->commonValue << " ";
-                
-                //if at the end of the row, add an endl and increment the current row
-                if (j == (this->noCols - 1)) {
-                    cout << endl;
-                    currentSMRow++;
-                }
-                else {
-                    currentSMCol++;
-                }
+            }
+            
+            //if at the end of the row, add an endl and reset current col
+            if (currentCol == (this->noCols - 1)) {
+                cout << endl;
+                currentRow++;
+                currentCol = 0;
+            }
+            //increment the current column if not at the end of a line
+            else {
+                currentCol++;
             }
         }
-}; //YOU ARE SO CLOSE BUDDY KEEP GOING!!!!
-
-SparseRow SparseMatrix::getRow(int c) {
+    }
+};
+SparseRow SparseMatrix::getSparseRow(int c) {
     return this->myMatrix[c];
 };
 
@@ -176,11 +227,9 @@ void SparseRow::setCol(int c) {
 
 int main () {
     
-    int n, m, cv, noNSV, nsv, r, c, value;
-    c = 0;
-    r = 0;
+    int n, m, cv, noNSV, nsv, value;
     nsv = 0;
-//    SparseMatrix* temp;
+    SparseMatrix* temp;
     
     cin >> n >> m >> cv >> noNSV;
     SparseMatrix* firstOne = new SparseMatrix(n, m, cv, noNSV);
@@ -197,15 +246,25 @@ int main () {
         }
     }
     
-//    SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
+    cin >> n >> m >> cv >> noNSV;
+    nsv = 0;
+    SparseMatrix* secondOne = new SparseMatrix(n, m, cv, noNSV);
     //Write the Statements to read in the second matrix
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            cin >> value;
+            if (value != cv) {
+                (*secondOne).setRow(nsv,i,j,value);
+                nsv++;
+            }
+        }
+    }
     
     //Statements to print the matrix
     cout << "First one in sparse matrix format" << endl;
     (*firstOne).display();
     cout << "First one in normal matrix format" << endl;
     (*firstOne).displayMatrix();
-    /*
     cout << "Second one in sparse matrix format" << endl;
     (*secondOne).display();
     cout << "Second one in normal matrix format" << endl;
@@ -216,13 +275,15 @@ int main () {
     cout << "After Transpose second one in normal format" << endl;
     temp = (*secondOne).Transpose();
     (*temp).displayMatrix();
+    /*
     cout << "Multiplication of matrices in sparse matrix form:" << endl;
     temp = (*secondOne).Multiply(*firstOne);
     (*temp).display();
+     */
     cout << "Addition of matrices in sparse matrix form:" << endl;
     temp = (*secondOne).Add(*firstOne);
     (*temp).display();
-     */
+    
     
     return 0;
 
