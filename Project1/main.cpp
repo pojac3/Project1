@@ -366,36 +366,24 @@ void SparseMatrix::displayMatrix() {
     
     //looping through all of the values in the original matrix, which turns out to be noRows*noCols
     //(1 has to be subtracted from each of these values because c++ starts counting at 0) and checks them all against myMatrix
-    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++) {
-        if (((noRows > 2) || (noCols > 2)) && (i == 0)) {
-            i++;
+    for (int i = 0; i < ((noRows)*(noCols)); i++) {
+        if (ifThereExistsANonSparseVariableAtRowCol(currentRow, currentCol)) {
+            cout << getSparseRow(currentRow,currentCol).getValue();
+        }
+        else {
+            cout << commonValue;
+        }
+        if (currentCol < noCols) {
+            cout << " ";
+            currentCol++;
+        }
+        if (currentCol >= noCols) {
+            cout << endl;
+            currentCol = 0;
+            currentRow++;
         }
         
-        //comparing the current row and col to each entry in myMatrix
-        for (int j = 0; j < noNonSparseValues; j++) {
-            //if the row and col match,
-            if ((this->getSparseRow(j).getCol() == currentCol) && (this->getSparseRow(j).getRow() == currentRow)) {
-                //then print the value and and a space
-                cout << this->getSparseRow(j).getValue() << " ";
-            }
-            
-            //if the current row and col do not match,
-            else {
-                //then print the common value and a space
-                cout  << this->commonValue << " ";
-            }
-            
-            //if at the end of the row, add an endl and reset current col
-            if (currentCol == (this->noCols - 1)) {
-                cout << endl;
-                currentRow++;
-                currentCol = 0;
-            }
-            //increment the current column if not at the end of a line
-            else {
-                currentCol++;
-            }
-        }
+        
     }
 };
 
