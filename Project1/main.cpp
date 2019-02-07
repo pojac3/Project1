@@ -14,8 +14,6 @@ using namespace std;
  *without having to store common values
  */
 class SparseRow {
-    
-    
 protected:
     int row;//Row#
     int col;//Column#
@@ -83,8 +81,9 @@ protected:
     int noNonSparseValues; //number of non sparse values in this SparseMatrix object
     SparseRow* myMatrix; //Array of SparseRows that contains info about the points in the array that are not the common value
     
-public:SparseMatrix ();
+public:SparseMatrix();
     SparseMatrix (int n, int m, int cv, int noNSV); //regular constructor. takes in the number of rows and columns, the commonValue and the number of nonSparseValues
+    ~SparseMatrix(); //destructor that will deep delete the arrays
     SparseMatrix*Transpose (); //Transposes the matrix
     SparseMatrix*Multiply (SparseMatrix& M); //Multiplies two matrices together
     SparseMatrix*Add (SparseMatrix& M); //Adds two matrices together
@@ -93,12 +92,28 @@ public:SparseMatrix ();
     void setSparseRow(int index, int r, int c,int v); //allows the user to change full rows at a time within the SparseMatrix
     SparseRow getSparseRow(int c); //returns the SparseRow stored at index c in myMatrix
     bool ifThereExistsANonSparseVariableAtRowCol(int r, int c);
+    SparseRow getSparseRow(int r, int c); //method to get a SparseRow with the specified row and column
+};
+
+SparseMatrix::~SparseMatrix() {
+    delete myMatrix;
 };
 
 //simply returns the SparseRow object stored at index c in myMatrix
 SparseRow SparseMatrix::getSparseRow(int c) {
     return this->myMatrix[c];
 };
+
+//returns a SparseRow with row r and column c, returns a default SparseRow if that does not exists. This should only be called when it has already been confirmed that one exists
+SparseRow SparseMatrix::getSparseRow(int r, int c) {
+    for (int i = 0; i < noNonSparseValues; i++) {
+        if (myMatrix[i].getCol() == c && myMatrix[i].getRow() == r) {
+            return myMatrix[i];
+        }
+    }
+    cout << "No NSV with Row " << r << "and Column" << c << endl;
+    return SparseRow();
+}
 
 /*allows the user to essentially just set a new row in myMatrix. becuase of the way that memory allocation works
  *with arrays and the new operator, it is possible to create new objects of the myMatrix array that are out of
@@ -190,46 +205,74 @@ SparseMatrix* SparseMatrix::Transpose() {
 //multiplies two matrices together
 SparseMatrix* SparseMatrix::Multiply(SparseMatrix &M) {
     
+    //the SparseMatrix to be returned
     SparseMatrix* copy = new SparseMatrix(noRows,noCols,commonValue,0);
     
-    int firstOneRow, firstOneCol, secondOneRow, secondOneCol, side, current;
+    //instantiating some variables
+    int firstOneRow, firstOneCol, secondOneRow, secondOneCol, current, firstOneValue, secondOneValue, index;
+    
+    //stores the current row and column values that will be incremented appropriately
     firstOneRow = 0;
     firstOneCol = 0;
     secondOneRow = 0;
     secondOneCol = 0;
-    current = 0;
-    side = noRows-1;
     
-    for (int i = 0; i < ((noRows-1)*(noCols-1)); i++) {
+    //the sum of the current rows we are multiplying together
+    current = 0;
+    
+    //the index of the sum we will be inserting into the copy
+    index = 0;
+    
+    //main for loop goes through this process noRows*noCols times
+    for (int i = 0; i < ((noRows)*(noCols)); i++) {
         
         //checking to see if i is 0 and if the matrix's side is 2 or less. required step in order to run properly on small matrices
         if (((noRows > 2) || (noCols > 2)) && (i == 0)) {
             i++;
         }
         
-        for (int j = 0; j < noNonSparseValues; j++) {
-            if ((firstOneCol == myMatrix[j].getCol() && firstOneRow == myMatrix[j].getRow()) && secondOneCol == M.myMatrix[j].getCol() && secondOneRow == M.myMatrix[j].getRow()) {
-                current += (myMatrix[i].getValue()*M.getSparseRow(i).getValue());
+        //loops through the current rows
+        while (firstOneCol < noCols && secondOneRow < noRows) {
+            
+            //if theres a non sparse variable at both current row and column values
+            if (this->ifThereExistsANonSparseVariableAtRowCol(firstOneRow, firstOneCol) && M.ifThereExistsANonSparseVariableAtRowCol(secondOneRow, secondOneCol)) {
+                
+                //then sum them up!
+                firstOneValue = this->getSparseRow(firstOneRow,firstOneCol).getValue();
+                secondOneValue = M.getSparseRow(secondOneRow,secondOneCol).getValue();
+                current += (firstOneValue * secondOneValue);
             }
+            
+            //incrementing the rows and columns appropriately
             firstOneCol++;
             secondOneRow++;
-            
         }
+        
+        //checking to see if anything was added up and adding it to copy if so
         if (current != 0) {
-            (*copy).myMatrix[i].setCol(secondOneCol);
-            (*copy).myMatrix[i].setRow(firstOneRow);
-            (*copy).myMatrix[i].setValue(current);
+            (*copy).myMatrix[index].setCol(secondOneCol);
+            (*copy).myMatrix[index].setRow(firstOneRow);
+            (*copy).myMatrix[index].setValue(current);
+            (*copy).noNonSparseValues++;
+            
+            //also incrementing the index and resetting current
+            index++;
+            current = 0;
         }
-        if (secondOneCol != side) {
+        
+        //checks for end of row/end of column
+        if (secondOneCol < M.noCols) {
+            firstOneCol = 0;
+            secondOneRow = 0;
             secondOneCol++;
+            if (secondOneCol >= M.noCols) {
+                firstOneRow++;
+                secondOneCol = 0;
+            }
         }
-        else {
-            firstOneRow++;
-            secondOneCol = 0;
-        }
+    }
     
-}
-    
+    //returning
     return copy;
 };
 
