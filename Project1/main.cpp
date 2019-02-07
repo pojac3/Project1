@@ -1,24 +1,22 @@
 //
 //  main.cpp
-//  Project1
+//  Project1 for Data Structures C S 2413 at The University of Oklahoma
 //
-//  Created by Jacob Courtney on 1/28/19.
-//  Copyright © 2019 Jacob Courtney. All rights reserved.
+//  Jacob Courtney
 //
 #include <iostream>
 using namespace std;
 
 /*
- *SparseRow Class. contains 3 integers: row, col, and value, which stores the row and column and value of a SparseMatrix object
- *This class is meant to be used in an array, where multiple SparseRow objects can be stored to represent a full matrix,
- *without having to store common values
+ *SparseRow Class. contains 4 integers: row, col, value and index (DEPRECATED), which stores the row, column, value and index of a SparseMatrix object
+ *This class is meant to be used in an array, where multiple SparseRow objects can be stored to represent a full matrix without having to store common values
  */
 class SparseRow {
 protected:
     int row;//Row#
     int col;//Column#
     int value;//We will assume that all our values will be integers
-    int index;//The index at which this SparseRow is stored in the array
+    int index;//The index at which this SparseRow is stored in the array. THIS IS DEPRECATED AND IS NO LONGER USEFUL
 public:
     SparseRow (); //default constructor;row=-1;col=-1;value=0
     SparseRow(int i, int r, int c, int v); //regular constructor: r = row, c = column, v = value
@@ -46,10 +44,11 @@ public:
     int getIndex() {
         return index;
     };
+    //sets the index of this SparseRow
     void setIndex(int i);
 };
 
-//SparseRow regular constructor, takes in r, c, and v and sets them equal to the appropriate values
+//SparseRow regular constructor, takes in r, c, v and i and sets them equal to the appropriate values
 SparseRow::SparseRow(int i, int r, int c, int v) {
     this->setCol(r);
     this->setRow(c);
@@ -57,8 +56,8 @@ SparseRow::SparseRow(int i, int r, int c, int v) {
     this->setIndex(i);
 }
 
-//Default Constructor, defaults row and col to -1, defaults the value to 0
-//Generally, if a SparseRow object contains a value of 0, then there is a bug in the software
+//Default Constructor, defaults row and col to -1, defaults the value to 0 and index to NULL
+//Generally, if a SparseRow object contains a value of 0 or an index of NULL, then there is a bug in the software
 SparseRow::SparseRow() {
     this->setCol(-1);
     this->setRow(-1);
@@ -83,7 +82,7 @@ protected:
     
 public:SparseMatrix();
     SparseMatrix (int n, int m, int cv, int noNSV); //regular constructor. takes in the number of rows and columns, the commonValue and the number of nonSparseValues
-    ~SparseMatrix(); //destructor that will deep delete the arrays
+    ~SparseMatrix(); //destructor that will deep delete the array
     SparseMatrix*Transpose (); //Transposes the matrix
     SparseMatrix*Multiply (SparseMatrix& M); //Multiplies two matrices together
     SparseMatrix*Add (SparseMatrix& M); //Adds two matrices together
@@ -95,6 +94,7 @@ public:SparseMatrix();
     SparseRow getSparseRow(int r, int c); //method to get a SparseRow with the specified row and column
 };
 
+//destructor. deep deletes myMatrix
 SparseMatrix::~SparseMatrix() {
     delete myMatrix;
 };
@@ -163,6 +163,7 @@ SparseMatrix::SparseMatrix () {
     myMatrix = nullptr;
 };
 
+//boolean function that returns true if there is a non sparse value at row r and column c
 bool SparseMatrix::ifThereExistsANonSparseVariableAtRowCol(int r, int c) {
     for (int i = 0; i < noNonSparseValues; i++) {
         if (this->getSparseRow(i).getRow() == r && this->getSparseRow(i).getCol() == c) {
@@ -467,7 +468,6 @@ int main () {
     cout << "Addition of matrices in sparse matrix form:" << endl;
     temp = (*secondOne).Add(*firstOne);
     (*temp).display();
-    
     
     return 0;
 
