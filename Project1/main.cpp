@@ -359,20 +359,26 @@ void SparseMatrix::display() {
 //method to display the matrix in its original format
 void SparseMatrix::displayMatrix() {
     
-    //the current coordinate in the matrix that we will be comparing. it will be compared to every single entry
-    //in the myMatrix array to see if it has the same row and col
+    //the current row and column we are on
     int currentRow = 0;
     int currentCol = 0;
     
-    //looping through all of the values in the original matrix, which turns out to be noRows*noCols
-    //(1 has to be subtracted from each of these values because c++ starts counting at 0) and checks them all against myMatrix
+    //the main for loops. it goes through this noRows*noCols times
     for (int i = 0; i < ((noRows)*(noCols)); i++) {
+        
+        //if there is a non sparse variable at currentRow, currentCol
         if (ifThereExistsANonSparseVariableAtRowCol(currentRow, currentCol)) {
+            
+            //then print out the value of it
             cout << getSparseRow(currentRow,currentCol).getValue();
         }
+        
+        //otherwise, print the common value
         else {
             cout << commonValue;
         }
+        
+        //end of row/col checks
         if (currentCol < noCols) {
             cout << " ";
             currentCol++;
@@ -382,8 +388,6 @@ void SparseMatrix::displayMatrix() {
             currentCol = 0;
             currentRow++;
         }
-        
-        
     }
 };
 
